@@ -8,7 +8,7 @@ var (
 		Foreground(lipgloss.Color("205")).
 		MarginBottom(1)
 
-	HiraganaStyle = lipgloss.NewStyle().
+	KanaStyle = lipgloss.NewStyle().
 		Foreground(lipgloss.Color("255")).
 		Bold(true)
 
