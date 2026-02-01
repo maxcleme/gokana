@@ -82,6 +82,7 @@ var DakutenKatakana = []Kana{
 	{"ザ", "za"}, {"ジ", "ji"}, {"ズ", "zu"}, {"ゼ", "ze"}, {"ゾ", "zo"},
 	{"ダ", "da"}, {"ヂ", "di"}, {"ヅ", "du"}, {"デ", "de"}, {"ド", "do"},
 	{"バ", "ba"}, {"ビ", "bi"}, {"ブ", "bu"}, {"ベ", "be"}, {"ボ", "bo"},
+	{"ヴ", "vu"},
 }
 
 // HandakutenKatakana contains katakana characters with handakuten (゜) marks

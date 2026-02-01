@@ -112,7 +112,7 @@ gokana/
 ぱぴぷぺぽ (pa pi pu pe po)
 ```
 
-### Katakana (46 main + 25 with dakuten/handakuten)
+### Katakana (46 main + 26 with dakuten/handakuten)
 
 **Main katakana:**
 ```
@@ -134,12 +134,15 @@ gokana/
 ザジズゼゾ (za ji zu ze zo)
 ダヂヅデド (da di du de do)
 バビブベボ (ba bi bu be bo)
+ヴ (vu) - used for foreign words containing the "v" sound
 ```
 
 **Handakuten (semi-voiced):**
 ```
 パピプペポ (pa pi pu pe po)
 ```
+
+**Total: 143 characters (71 hiragana + 72 katakana)**
 
 ## License
 
