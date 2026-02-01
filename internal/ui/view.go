@@ -12,19 +12,170 @@ import (
 func View(m *model.Model) string {
 	if m.Quitting {
 		points := m.GetPoints()
-		finalScore := fmt.Sprintf("\nFinal Score: %d points (%d correct)\n", points, m.Correct)
-		return finalScore
+		if m.GameOver {
+			return fmt.Sprintf("\n💀 GAME OVER 💀\n\nFinal Score: %d points (%d correct)\n", points, m.Correct)
+		}
+		return fmt.Sprintf("\nFinal Score: %d points (%d correct)\n", points, m.Correct)
 	}
 
-	if m.GameOver {
-		points := m.GetPoints()
-		gameOverMsg := fmt.Sprintf("\n💀 GAME OVER 💀\n\nFinal Score: %d points (%d correct)\n\nPress ESC or Ctrl+C to quit\n", points, m.Correct)
-		return gameOverMsg
+	switch m.State {
+	case model.StateMenu:
+		return viewMenu(m)
+	case model.StatePlaying:
+		return viewGame(m)
+	default:
+		return ""
 	}
+}
 
+func viewMenu(m *model.Model) string {
 	var s strings.Builder
 
-	s.WriteString(TitleStyle.Render("🗾 Hiragana Quiz"))
+	s.WriteString(TitleStyle.Render("🗾 Gokana"))
+	s.WriteString("\n\n")
+
+	subtitle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("111")).
+		Italic(true).
+		Render("Japanese Kana Quiz Game")
+	s.WriteString(subtitle)
+	s.WriteString("\n\n")
+
+	sectionStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("255"))
+	activeSectionStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("205"))
+	valueStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("111"))
+	activeValueStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("205")).Bold(true)
+	dimStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
+
+	// Kana Selection
+	kanaHeader := "Character Set:"
+	if m.MenuSection == model.MenuSectionKana {
+		s.WriteString(activeSectionStyle.Render("▸ " + kanaHeader))
+	} else {
+		s.WriteString(sectionStyle.Render("  " + kanaHeader))
+	}
+	s.WriteString("\n")
+
+	options := []struct {
+		name string
+		desc string
+	}{
+		{"Hiragana", "あ い う え お"},
+		{"Katakana", "ア イ ウ エ オ"},
+		{"Both", "あ ア い イ う ウ"},
+	}
+
+	for i, opt := range options {
+		cursor := "    "
+		var optStyle lipgloss.Style
+		if m.MenuSection == model.MenuSectionKana {
+			if i == m.MenuCursor {
+				cursor = "  ▸ "
+				optStyle = activeValueStyle
+			} else {
+				optStyle = dimStyle
+			}
+		} else {
+			if i == int(m.SelectedKana) {
+				cursor = "  ✓ "
+				optStyle = valueStyle
+			} else {
+				optStyle = dimStyle
+			}
+		}
+		line := cursor + optStyle.Render(opt.name) + "  " + dimStyle.Render(opt.desc)
+		s.WriteString(line + "\n")
+	}
+	s.WriteString("\n")
+
+	// Dakuten Selection
+	dakutenHeader := "Include Dakuten:"
+	if m.MenuSection == model.MenuSectionDakuten {
+		s.WriteString(activeSectionStyle.Render("▸ " + dakutenHeader))
+		s.WriteString("  ")
+		if m.DakutenEnabled {
+			s.WriteString(activeValueStyle.Render("< ON >"))
+			s.WriteString("  " + dimStyle.Render("が ざ だ ば ぱ"))
+		} else {
+			s.WriteString(activeValueStyle.Render("< OFF >"))
+			s.WriteString("  " + dimStyle.Render("basic kana only"))
+		}
+	} else {
+		s.WriteString(sectionStyle.Render("  " + dakutenHeader))
+		s.WriteString("  ")
+		if m.DakutenEnabled {
+			s.WriteString(valueStyle.Render("ON"))
+			s.WriteString("  " + dimStyle.Render("が ざ だ ば ぱ"))
+		} else {
+			s.WriteString(valueStyle.Render("OFF"))
+			s.WriteString("  " + dimStyle.Render("basic kana only"))
+		}
+	}
+	s.WriteString("\n\n")
+
+	// Level Selection
+	levelHeader := "Starting Level:"
+	if m.MenuSection == model.MenuSectionLevel {
+		s.WriteString(activeSectionStyle.Render("▸ " + levelHeader))
+		s.WriteString("  ")
+		s.WriteString(activeValueStyle.Render(fmt.Sprintf("< %d >", m.StartLevel)))
+	} else {
+		s.WriteString(sectionStyle.Render("  " + levelHeader))
+		s.WriteString("  ")
+		s.WriteString(valueStyle.Render(fmt.Sprintf("%d", m.StartLevel)))
+	}
+	s.WriteString("\n\n")
+
+	// Lives Selection
+	livesHeader := "Starting Lives:"
+	if m.MenuSection == model.MenuSectionLives {
+		s.WriteString(activeSectionStyle.Render("▸ " + livesHeader))
+		s.WriteString("  ")
+		hearts := ""
+		for i := 0; i < m.StartLives; i++ {
+			hearts += "❤️ "
+		}
+		s.WriteString(activeValueStyle.Render(fmt.Sprintf("< %d >", m.StartLives)))
+		s.WriteString("  " + hearts)
+	} else {
+		s.WriteString(sectionStyle.Render("  " + livesHeader))
+		s.WriteString("  ")
+		hearts := ""
+		for i := 0; i < m.StartLives; i++ {
+			hearts += "❤️ "
+		}
+		s.WriteString(valueStyle.Render(fmt.Sprintf("%d", m.StartLives)))
+		s.WriteString("  " + hearts)
+	}
+	s.WriteString("\n\n")
+
+	// Start Button
+	if m.MenuSection == model.MenuSectionStart {
+		startBtnStyle := lipgloss.NewStyle().
+			Bold(true).
+			Foreground(lipgloss.Color("0")).
+			Background(lipgloss.Color("205")).
+			Padding(0, 2)
+		s.WriteString(startBtnStyle.Render("▸ START GAME"))
+	} else {
+		startBtnStyle := lipgloss.NewStyle().
+			Foreground(lipgloss.Color("240")).
+			Padding(0, 2)
+		s.WriteString(startBtnStyle.Render("  START GAME"))
+	}
+	s.WriteString("\n\n")
+
+	helpText := dimStyle.Render("←/→ sections • ↑/↓ adjust • Enter to confirm • ESC to quit")
+	s.WriteString(helpText)
+
+	return s.String()
+}
+
+func viewGame(m *model.Model) string {
+	var s strings.Builder
+
+	title := fmt.Sprintf("🗾 %s Quiz", m.SelectedKana.String())
+	s.WriteString(TitleStyle.Render(title))
 	s.WriteString("\n\n")
 
 	livesText := ""
@@ -53,7 +204,6 @@ func View(m *model.Model) string {
 
 	var playArea strings.Builder
 	for row := 0; row < m.MaxFallHeight; row++ {
-		// Create a map of positions to rendered kana strings
 		positionedKanas := make(map[int]string)
 		maxPos := 0
 
@@ -64,7 +214,7 @@ func View(m *model.Model) string {
 					correctKanaStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("42")).Bold(true)
 					kana = correctKanaStyle.Render(fk.Kana.Character)
 				} else {
-					kana = HiraganaStyle.Render(fk.Kana.Character)
+					kana = KanaStyle.Render(fk.Kana.Character)
 				}
 				positionedKanas[fk.HorizontalPos] = kana
 				if fk.HorizontalPos > maxPos {
@@ -73,8 +223,6 @@ func View(m *model.Model) string {
 			}
 		}
 
-		// Build the line with spaces and kanas at absolute positions
-		// Always build to full width to prevent centering shifts
 		line := ""
 		for pos := 0; pos < m.PlayAreaWidth; pos++ {
 			if kana, exists := positionedKanas[pos]; exists {
